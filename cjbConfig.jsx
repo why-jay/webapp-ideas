@@ -1,10 +1,9 @@
 const webpack = require('webpack');
 
-module.exports.target = 'node';
-
 module.exports.webpackConfigs = {
   bin: {
     entry: './src/bin.jsx',
+    target: 'node',
     output: {
       filename: 'bin.js'
     },
