@@ -1,0 +1,40 @@
+{
+  "name": "chcokr-webapp-build",
+  "description": "A webapp build process.",
+  "version": "0.0.0",
+  "bin": {
+    "cwb": "dist/bin.js"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "babel": "^5.2.17",
+    "babel-loader": "^5.0.0",
+    "bluebird": "^2.9.25",
+    "browserslist": "^0.4.0",
+    "compression": "^1.4.3",
+    "express": "^4.12.3",
+    "extract-text-webpack-plugin": "^0.7.1",
+    "html-webpack-plugin": "^1.3.0",
+    "json-loader": "^0.5.1",
+    "raw-loader": "^0.5.1",
+    "rimraf": "^2.3.3",
+    "source-map-support": "^0.2.10",
+    "webpack": "^1.9.5",
+    "webpack-dev-server": "^1.8.2"
+  },
+  "scripts": {},
+  "author": "YJ Yang <chcokr@gmail.com>",
+  "main": "dist/api.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chcokr/webapp-build.git"
+  },
+  "keywords": [
+    "build"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/chcokr/webapp-build/issues"
+  },
+  "homepage": "https://github.com/chcokr/webapp-build#readme"
+}

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% if (!o.htmlWebpackPlugin.options.isWdsMode) { %}
+  <link
+    rel="stylesheet"
+    href="./index-{%=o.htmlWebpackPlugin.options.timestamp%}.css">
+  {% } %}
+</head>
+<body>
+  <div id="cwb-app"></div>
+  <script src="{%=o.htmlWebpackPlugin.assets.main%}"></script>
+</body>
+</html>
