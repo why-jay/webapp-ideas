@@ -1,6 +1,3 @@
-require('babel/polyfill');
-require('source-map-support').install();
-
 const runCLIAsync = require('./runCLIAsync.jsx');
 
 const cjb = require('chcokr-js-build');
