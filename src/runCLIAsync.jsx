@@ -24,11 +24,24 @@ const cwd = process.cwd();
  *  cjbConfig.js/jsx, modify it through `createSingleWebpackConfigAsync()`, and
  *  then invokes CJB's webpack-dev-server with the final modified config.
  *  - If `process.argv[2]` is `"distserver"`, invokes `runDistServerAsync()`
- *  - Otherwise, deletes dist/, copies the contents of this repo's
- *  dist/.gitignore over to the project's dist/.gitignore (after creating the
- *  path), modifies the webpack config of entry point specified in
- *  cjbConfig.js/jsx through `createSingleWebpackConfigAsync()`, and runs each
- *  webpack configuration one by one (thereby creating each bundle).
+ *  - Otherwise:
+ *   - deletes dist/
+ *   - copies the contents of this repo's dist/.gitignore over to the project's
+ *   dist/.gitignore (after creating the path)
+ *   - modifies the webpack config of entry point specified in cjbConfig.js/jsx
+ *   through `createSingleWebpackConfigAsync()`
+ *   - creates a temporary clone of the specified entry file
+ *   - adds the following text to the top of the temporary file
+ *   ```JS
+ *    // Start: CWB-generated output
+ *    require('chcokr-webapp-build/dist/polyfill.js');
+ *    require('chcokr-webapp-build/dist/polyfill.css');
+ *    // End: CWB-generated output
+ *   ```
+ *   - invokes webpack from that entry point with the final modified webpack
+ *   configuration
+ *   - of course, if multiple entry points have been defined, each bundle gets
+ *   built one by one
  *
  * @returns {void}
  */
@@ -69,15 +82,19 @@ async function runCLIAsync() {
         require('raw!../dist/.gitignore')
       );
 
-      const cwbWebpackConfigs = {};
       for (let entryPointName of Object.keys(cjbWebpackConfigs)) {
-        cwbWebpackConfigs[entryPointName] =
-          await createSingleWebpackConfigAsync(
-            false,
-            cjbWebpackConfigs[entryPointName]
-          );
+        const config = await createSingleWebpackConfigAsync(
+          false,
+          cjbWebpackConfigs[entryPointName]
+        );
+        await cjb.runWebpackAsync(
+          config,
+          '// Start: CWB-generated output\n' +
+            "require('chcokr-webapp-build/dist/polyfill.js');\n" +
+            "require('chcokr-webapp-build/dist/polyfill.css');\n" +
+            '// End: CWB-generated output\n'
+        );
       }
-      await cjb.runWebpackAsync(cwbWebpackConfigs);
 
     }
 
