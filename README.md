@@ -187,24 +187,31 @@ idea](https://github.com/petehunt/jsxstyle).
 
 Following CJB's tradition of adding stuff to the beginning of a temporary entry
 file, CWB adds stuff the same way, but not the same things.
-CWB adds the following lines to the beginning of the temporary entry file.
+CWB adds the following line to the beginning of the temporary entry file.
 
 ```JS
-// Start: CWB-generated output
-require('chcokr-webapp-build/dist/polyfill.js');
-require('chcokr-webapp-build/dist/polyfill.css');
-// End: CWB-generated output
+require('chcokr-webapp-build/dist/polyfill.jsx');
 ```
 
-`polyfill.js` simply `require()`s `chcokr-js-build/dist/polyfill-web`.
+`polyfill.jsx` in turn contains:
 
-`polyfill.css` enforces the following important CSS decisions upon a CWB app:
+```JS
+require('chcokr-js-build/dist/polyfill-web');
+require('style!css!./polyfill.css');
+require('style!css!../node_modules/normalize.css/normalize.css');
+```
+
+`dist/polyfill.css` enforces the following important CSS decisions upon a CWB
+app:
 
 - `box-sizing: border-box` is the default box sizing method across the app.
 For an explanation of why, see [Paul Irish's
 argument](http://www.paulirish.com/2012/box-sizing-border-box-ftw/).
 - `<body>` gets paddings and margins of zero.
 This lets `#cwb-app` occupy the entire screen.
+
+Also, as you can see, CWB takes advantage of `normalize.css` as well, providing
+the app with saner CSS defaults.
 
 ## Minification and optimization
 

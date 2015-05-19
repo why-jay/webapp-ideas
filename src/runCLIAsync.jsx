@@ -90,8 +90,7 @@ async function runCLIAsync() {
         await cjb.runWebpackAsync(
           config,
           '// Start: CWB-generated output\n' +
-            "require('chcokr-webapp-build/dist/polyfill.js');\n" +
-            "require('chcokr-webapp-build/dist/polyfill.css');\n" +
+            "require('chcokr-webapp-build/dist/polyfill.jsx');\n" +
             '// End: CWB-generated output\n'
         );
       }
