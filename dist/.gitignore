@@ -1,5 +1,6 @@
 # Ignore everything in this directory
 *
-# Except this file and the polyfills
+# Except this file, the loaders and the polyfills
 !.gitignore
+!*loader.js
 !polyfill*

@@ -197,8 +197,8 @@ require('chcokr-webapp-build/dist/polyfill.jsx');
 
 ```JS
 require('chcokr-js-build/dist/polyfill-web');
-require('style!css!./polyfill.css');
-require('style!css!../node_modules/normalize.css/normalize.css');
+require('./polyfill.css');
+require('../node_modules/normalize.css/normalize.css');
 ```
 
 `dist/polyfill.css` enforces the following important CSS decisions upon a CWB
@@ -276,17 +276,21 @@ array).
 ```
 {
   test: /\.css/,
-  loader: ExtractPlugin.extract('style', 'css!autoprefixer?' +
-    'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
+  loader: ExtractPlugin.extract('<path to a local copy of style-loader>',
+    '<path to a local copy of css-loader>' +
+      '!<path to a local copy of autoprefixer-loader>' +
+      '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
 }
 ```
 
 ```
 {
   test: /\.scss/,
-  loader: ExtractPlugin.extract('style', 'css!autoprefixer?' +
-    'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>' +
-    '!sass?sourceMap=true'
+  loader: ExtractPlugin.extract('<path to a local copy of style-loader>',
+    '<path to a local copy of css-loader>' +
+      '!<path to a local copy of autoprefixer-loader>' +
+      '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>' +
+      '!sass?sourceMap=true'
 }
 ```
 
@@ -369,16 +373,20 @@ will be the last one in the `module.loaders` array).
 ```
 {
   test: /\.css/,
-  loader: 'style!css!autoprefixer?' +
-    'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
+  loader: ExtractPlugin.extract('<path to a local copy of style-loader>',
+    '<path to a local copy of css-loader>' +
+      '!<path to a local copy of autoprefixer-loader>' +
+      '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
 }
 ```
 ```
 {
   test: /\.scss/,
-  loader: 'style!css!autoprefixer?' +
-    'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
-    '!sass?sourceMap=true'
+  loader: ExtractPlugin.extract('<path to a local copy of style-loader>',
+    '<path to a local copy of css-loader>' +
+      '!<path to a local copy of autoprefixer-loader>' +
+      '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>' +
+      '!sass?sourceMap=true'
 }
 ```
 

@@ -19,16 +19,20 @@ const webpack = require('webpack');
  * ```
  * {
  *   test: /\.css/,
- *   loader: 'style!css!autoprefixer?' +
- *     'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
+ *   loader: '<path to a local copy of style-loader>' +
+ *     '!<path to a local copy of css-loader>' +
+ *     '!<path to a local copy of autoprefixer-loader>' +
+ *     '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
  * }
  * ```
  * ```
  * {
  *   test: /\.scss/,
- *   loader: 'style!css!autoprefixer?' +
- *     'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
- *     '!sass?sourceMap=true'
+ *   loader: '<path to a local copy of style-loader>' +
+ *     '!<path to a local copy of css-loader>' +
+ *     '!<path to a local copy of autoprefixer-loader>' +
+ *     '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>' +
+ *     '!<path to a local copy of sass-loader>?sourceMap=true'
  * }
  * ```
  *
@@ -37,16 +41,20 @@ const webpack = require('webpack');
  * ```
  * {
  *   test: /\.css/,
- *   loader: ExtractPlugin.extract('style', 'css!autoprefixer?' +
- *     'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
+ *   loader: ExtractPlugin.extract('<path to a local copy of style-loader>',
+ *     '<path to a local copy of css-loader>' +
+ *     '!<path to a local copy of autoprefixer-loader>' +
+ *     '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
  * }
  * ```
  * ```
  * {
  *   test: /\.scss/,
- *   loader: ExtractPlugin.extract('style', 'css!autoprefixer?' +
- *     'browsers=<cjbConfig.js/jsx's `cwbBrowsers`>'
- *     '!sass?sourceMap=true'
+ *   loader: ExtractPlugin.extract('<path to a local copy of style-loader>',
+ *     '<path to a local copy of css-loader>' +
+ *     '!<path to a local copy of autoprefixer-loader>' +
+ *     '?browsers=<cjbConfig.js/jsx's `cwbBrowsers`>' +
+ *     '!<path to a local copy of sass-loader>?sourceMap=true'
  * }
  * ```
  *
@@ -101,10 +109,22 @@ const webpack = require('webpack');
  * on a webpack-dev-server.
  * @param {webpackConfig} config The `webpackConfig` property of a
  * `cjbConfig.js/jsx`.
+ * @param {object} loaderPaths A map from the name of a webpack loader to the
+ * path where that loader can be found.
+ * `autoprefixer`, `css`, `sass` and `style` are the loaders that must be
+ * defined.
  * @returns {object} A new config object which all properties of `config`
  * have been copied into and the aforementioned modifications have been made to.
  */
-async function createSingleWebpackConfigAsync(isWdsMode, config) {
+async function createSingleWebpackConfigAsync(isWdsMode, config, loaderPaths) {
+  for (let loaderName of ['autoprefixer', 'css', 'sass', 'style']) {
+    if (!loaderPaths[loaderName]) {
+      throw new Error(`Path for webpack loader "${loaderName}" must be` +
+        ` specified by defining property \`${loaderName}\` in argument` +
+        ' `loaderPaths`');
+    }
+  }
+
   const newConfig = Object.assign({}, config);
   const timestamp = Date.now();
 
@@ -118,19 +138,26 @@ async function createSingleWebpackConfigAsync(isWdsMode, config) {
     newConfig.module.loaders = [];
   }
   const autoprefixerStr =
-    `autoprefixer?browsers=${projectCjbConfig.cwbBrowsers}`;
+    `${loaderPaths.autoprefixer}?browsers=${projectCjbConfig.cwbBrowsers}`;
+  const sassStr = `${loaderPaths.sass}?sourceMap=true`;
   newConfig.module.loaders = [
     {
       test: /\.css/,
-      loader: isWdsMode ? `style!css!${autoprefixerStr}` :
-        ExtractTextPlugin.extract('style', `css!${autoprefixerStr}`)
+      loader: isWdsMode ?
+        `${loaderPaths.style}!${loaderPaths.css}!${autoprefixerStr}` :
+        ExtractTextPlugin.extract(
+          loaderPaths.style,
+          `${loaderPaths.css}!${autoprefixerStr}`
+        )
     },
     {
       test: /\.scss/,
-      loader: isWdsMode ? `style!css!${autoprefixerStr}!sass?sourceMap=true` :
+      loader: isWdsMode ?
+        `${loaderPaths.style}!${loaderPaths.css}!${autoprefixerStr}!${sassStr}`
+        :
         ExtractTextPlugin.extract(
-          'style',
-          `css!${autoprefixerStr}!sass?sourceMap=true`
+          loaderPaths.style,
+          `${loaderPaths.css}!${autoprefixerStr}!${sassStr}`
         )
     },
     ...newConfig.module.loaders

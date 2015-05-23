@@ -10,6 +10,23 @@ const path = require('path');
 const rimrafAsync = Bluebird.promisify(require('rimraf'));
 
 const cwd = process.cwd();
+const thisProjectName = require('../package.json').name;
+
+const loaderPaths = {
+  autoprefixer: path.join(cwd, 'node_modules',
+    thisProjectName, 'dist', 'autoprefixer-loader'),
+  css: path.join(cwd, 'node_modules',
+    thisProjectName, 'dist', 'css-loader'),
+  sass: path.join(cwd, 'node_modules',
+    thisProjectName, 'dist', 'sass-loader'),
+  style: path.join(cwd, 'node_modules',
+    thisProjectName, 'dist', 'style-loader')
+};
+
+const textToAddToTopOfTempEntryFile =
+  '// Start: CWB-generated output\n' +
+    "require('chcokr-webapp-build/dist/polyfill.jsx');\n" +
+    '// End: CWB-generated output\n';
 
 /**
  * Runs the following tasks in order:
@@ -58,14 +75,40 @@ async function runCLIAsync() {
 
     await cjb.runEslintAsync();
 
-    const cjbWebpackConfigs = await cjb.getModifiedWebpackConfigsAsync();
+    const cjbConfig = await cjb.getCjbConfigAsync();
+    const entryPoints = Object.keys(cjbConfig.webpackConfigs);
+    let cjbWebpackConfigs = {};
+    for (let point of entryPoints) {
+      cjbWebpackConfigs[point] =
+        cjb.createSingleWebpackConfig(cjbConfig.webpackConfigs[point], {
+          babel: path.join(cwd, 'node_modules',
+            thisProjectName, 'dist', 'babel-loader'),
+          json: path.join(cwd, 'node_modules',
+            thisProjectName, 'dist', 'json-loader')
+        });
+    }
 
     if (process.argv[2] === 'wds') {
 
       const cwbStartWebpackConfig = cjbWebpackConfigs.cwbStart;
       const cwbWebpackConfig =
-        await createSingleWebpackConfigAsync(true, cwbStartWebpackConfig);
-      await cjb.runWebpackDevServerAsync(cwbWebpackConfig);
+        await createSingleWebpackConfigAsync(
+          true,
+          cwbStartWebpackConfig,
+          loaderPaths
+        );
+      await cjb.runWebpackDevServerAsync(
+        cwbWebpackConfig,
+        textToAddToTopOfTempEntryFile,
+        {
+          webpack: path.join(cwd, 'node_modules',
+            thisProjectName, 'node_modules', 'webpack'),
+          'webpack-dev-server': // eslint-disable-line object-shorthand
+                                // (why is this a violation?)
+            path.join(cwd, 'node_modules',
+              thisProjectName, 'node_modules', 'webpack-dev-server')
+        }
+      );
 
     } else if (process.argv[2] === 'distserver') {
 
@@ -85,13 +128,12 @@ async function runCLIAsync() {
       for (let entryPointName of Object.keys(cjbWebpackConfigs)) {
         const config = await createSingleWebpackConfigAsync(
           false,
-          cjbWebpackConfigs[entryPointName]
+          cjbWebpackConfigs[entryPointName],
+          loaderPaths
         );
         await cjb.runWebpackAsync(
           config,
-          '// Start: CWB-generated output\n' +
-            "require('chcokr-webapp-build/dist/polyfill.jsx');\n" +
-            '// End: CWB-generated output\n'
+          textToAddToTopOfTempEntryFile
         );
       }
 
