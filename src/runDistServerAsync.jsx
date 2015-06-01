@@ -24,43 +24,38 @@ const cwd = process.cwd();
  * CWB_DIST_SERVER_PORT isn't an integer
  */
 async function runDistServerAsync() {
-  try {
+  const projectEnv = await cjb.getProjectEnvAsync();
+  if (!projectEnv.CWB_DIST_SERVER_PORT) {
+    throw new Error('To use the dist server, environment.js/jsx must export' +
+      'property CWB_DIST_SERVER_PORT');
+  }
+  if (!Number.isInteger(projectEnv.CWB_DIST_SERVER_PORT)) {
+    throw new Error('environment.js/jsx property CWB_DIST_SERVER_PORT must' +
+      ' bean integer');
+  }
+  const port = projectEnv.CWB_DIST_SERVER_PORT;
 
-    const projectEnv = await cjb.getProjectEnvAsync();
-    if (!projectEnv.CWB_DIST_SERVER_PORT) {
-      throw new Error('To use the dist server, environment.js/jsx must export' +
-        'property CWB_DIST_SERVER_PORT');
-    }
-    if (!Number.isInteger(projectEnv.CWB_DIST_SERVER_PORT)) {
-      throw new Error('environment.js/jsx property CWB_DIST_SERVER_PORT must' +
-        ' bean integer');
-    }
-    const port = projectEnv.CWB_DIST_SERVER_PORT;
+  const server = Bluebird.promisifyAll(express());
 
-    const server = Bluebird.promisifyAll(express());
+  server.use(compress({
+    threshold: false // compress everything
+  }));
 
-    server.use(compress({
-      threshold: false // compress everything
-    }));
-
-    server.use(express.static(
-      path.join(cwd, 'dist'),
-      {
-        maxAge: '365d', // cache all the static files for a long time,
-        setHeaders(res, staticFilePath) { // except index.html.
-          if (staticFilePath === path.resolve(cwd, 'dist', 'index.html')) {
-            // index.html is cached for 10min.
-            res.set('Cache-Control', 'public, max-age=600');
-          }
+  server.use(express.static(
+    path.join(cwd, 'dist'),
+    {
+      maxAge: '365d', // cache all the static files for a long time,
+      setHeaders(res, staticFilePath) { // except index.html.
+        if (staticFilePath === path.resolve(cwd, 'dist', 'index.html')) {
+          // index.html is cached for 10min.
+          res.set('Cache-Control', 'public, max-age=600');
         }
       }
-    ));
+    }
+  ));
 
-    await server.listenAsync(port);
-    console.log(`Dist server is running at http://localhost:${port}`);
-  } catch(err) {
-    cjb.utils.handleError(err);
-  }
+  await server.listenAsync(port);
+  console.log(`Dist server is running at http://localhost:${port}`);
 }
 
 module.exports = runDistServerAsync;

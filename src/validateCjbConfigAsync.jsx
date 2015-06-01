@@ -14,24 +14,18 @@ const cjb = require('chcokr-js-build');
  * @returns {void}
  */
 async function validateCjbConfigAsync() {
-  try {
+  // cjb.getCjbConfigAsync() runs CJB's cjbConfig.js/jsx validations
+  const projectCjbConfig = await cjb.getCjbConfigAsync();
 
-    // cjb.getCjbConfigAsync() runs CJB's cjbConfig.js/jsx validations
-    const projectCjbConfig = await cjb.getCjbConfigAsync();
+  if (!projectCjbConfig.cwbBrowsers) {
+    throw new Error('cjbConfig.js/jsx must export *string* property' +
+      ' `cwbBrowsers`. The string should follow a format defined at' +
+      ' https://github.com/ai/browserslist');
+  }
 
-    if (!projectCjbConfig.cwbBrowsers) {
-      throw new Error('cjbConfig.js/jsx must export *string* property' +
-        ' `cwbBrowsers`. The string should follow a format defined at' +
-        ' https://github.com/ai/browserslist');
-    }
-
-    if (!projectCjbConfig.webpackConfigs.cwbStart) {
-      throw new Error('cjbConfig.js/jsx\'s exported property `webpackConfigs`' +
-        ' must define entry point `cwbStart`.');
-    }
-
-  } catch (err) {
-    cjb.utils.handleError(err);
+  if (!projectCjbConfig.webpackConfigs.cwbStart) {
+    throw new Error('cjbConfig.js/jsx\'s exported property `webpackConfigs`' +
+      ' must define entry point `cwbStart`.');
   }
 }
 

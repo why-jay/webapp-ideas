@@ -63,84 +63,78 @@ const textToAddToTopOfTempEntryFile =
  * @returns {void}
  */
 async function runCLIAsync() {
-  try {
+  await cjb.checkPathsExistAsync();
 
-    await cjb.checkPathsExistAsync();
+  await validateCjbConfigAsync();
 
-    await validateCjbConfigAsync();
+  await cjb.installPrecommitHookAsync();
 
-    await cjb.installPrecommitHookAsync();
+  await cjb.runBabelAsync();
 
-    await cjb.runBabelAsync();
+  await cjb.runEslintAsync();
 
-    await cjb.runEslintAsync();
+  const cjbConfig = await cjb.getCjbConfigAsync();
+  const entryPoints = Object.keys(cjbConfig.webpackConfigs);
+  let cjbWebpackConfigs = {};
+  for (let point of entryPoints) {
+    cjbWebpackConfigs[point] =
+      cjb.createSingleWebpackConfig(cjbConfig.webpackConfigs[point], {
+        babel: path.join(cwd, 'node_modules',
+          thisProjectName, 'dist', 'babel-loader'),
+        json: path.join(cwd, 'node_modules',
+          thisProjectName, 'dist', 'json-loader')
+      });
+  }
 
-    const cjbConfig = await cjb.getCjbConfigAsync();
-    const entryPoints = Object.keys(cjbConfig.webpackConfigs);
-    let cjbWebpackConfigs = {};
-    for (let point of entryPoints) {
-      cjbWebpackConfigs[point] =
-        cjb.createSingleWebpackConfig(cjbConfig.webpackConfigs[point], {
-          babel: path.join(cwd, 'node_modules',
-            thisProjectName, 'dist', 'babel-loader'),
-          json: path.join(cwd, 'node_modules',
-            thisProjectName, 'dist', 'json-loader')
-        });
-    }
+  if (process.argv[2] === 'wds') {
 
-    if (process.argv[2] === 'wds') {
-
-      const cwbStartWebpackConfig = cjbWebpackConfigs.cwbStart;
-      const cwbWebpackConfig =
-        await createSingleWebpackConfigAsync(
-          true,
-          cwbStartWebpackConfig,
-          loaderPaths
-        );
-      await cjb.runWebpackDevServerAsync(
-        cwbWebpackConfig,
-        textToAddToTopOfTempEntryFile,
-        {
-          webpack: path.join(cwd, 'node_modules',
-            thisProjectName, 'node_modules', 'webpack'),
-          'webpack-dev-server': // eslint-disable-line object-shorthand
-                                // (why is this a violation?)
-            path.join(cwd, 'node_modules',
-              thisProjectName, 'node_modules', 'webpack-dev-server')
-        }
+    const cwbStartWebpackConfig = cjbWebpackConfigs.cwbStart;
+    const cwbWebpackConfig =
+      await createSingleWebpackConfigAsync(
+        true,
+        cwbStartWebpackConfig,
+        loaderPaths
       );
-
-    } else if (process.argv[2] === 'distserver') {
-
-      await runDistServerAsync();
-
-    } else {
-
-      console.log('Deleting dist/');
-      await rimrafAsync(path.join(cwd, 'dist'));
-      console.log('Rewriting dist/.gitignore');
-      await fs.mkdirAsync(path.join(cwd, 'dist'));
-      await fs.writeFileAsync(
-        path.join(cwd, 'dist', '.gitignore'),
-        require('raw!../dist/.gitignore')
-      );
-
-      for (let entryPointName of Object.keys(cjbWebpackConfigs)) {
-        const config = await createSingleWebpackConfigAsync(
-          false,
-          cjbWebpackConfigs[entryPointName],
-          loaderPaths
-        );
-        await cjb.runWebpackAsync(
-          config,
-          textToAddToTopOfTempEntryFile
-        );
+    await cjb.runWebpackDevServerAsync(
+      cwbWebpackConfig,
+      textToAddToTopOfTempEntryFile,
+      {
+        webpack: path.join(cwd, 'node_modules',
+          thisProjectName, 'node_modules', 'webpack'),
+        'webpack-dev-server': // eslint-disable-line object-shorthand
+                              // (why is this a violation?)
+          path.join(cwd, 'node_modules',
+            thisProjectName, 'node_modules', 'webpack-dev-server')
       }
+    );
 
+  } else if (process.argv[2] === 'distserver') {
+
+    await runDistServerAsync();
+
+  } else {
+
+    console.log('Deleting dist/');
+    await rimrafAsync(path.join(cwd, 'dist'));
+    console.log('Rewriting dist/.gitignore');
+    await fs.mkdirAsync(path.join(cwd, 'dist'));
+    await fs.writeFileAsync(
+      path.join(cwd, 'dist', '.gitignore'),
+      require('raw!../dist/.gitignore')
+    );
+
+    for (let entryPointName of Object.keys(cjbWebpackConfigs)) {
+      const config = await createSingleWebpackConfigAsync(
+        false,
+        cjbWebpackConfigs[entryPointName],
+        loaderPaths
+      );
+      await cjb.runWebpackAsync(
+        config,
+        textToAddToTopOfTempEntryFile
+      );
     }
 
-  } catch(err) {
-    cjb.utils.handleError(err);
   }
 }
 
