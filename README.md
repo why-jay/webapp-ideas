@@ -82,7 +82,7 @@ For a full list of these modifications, there's a relevant section below.
 
 ### Don't write an `index.html`
 
-You many ask: isn't a webapp's entry point on a browser always an HTML file?
+You may ask: isn't a webapp's entry point on a browser always an HTML file?
 That is of course correct, but CWB doesn't expect an `index.html` file to be
 written, because of many reasons:
  
